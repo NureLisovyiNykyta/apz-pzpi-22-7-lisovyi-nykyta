@@ -1,0 +1,725 @@
+Міністерство освіти і науки України
+Харківський національний університет радіоелектроніки
+Кафедра програмної інженерії
+ 
+ 
+Лабораторна робота 
+з дисципліни «Архітектура програмного забезпечення»
+з теми: «Розробка програмної архітектури, створення та відлагодження програмного коду серверної частини програмної системи» 
+ 
+
+
+Виконав
+ст. гр. ПЗПІ-22-7
+Лісови Нікіта Андрійович
+30 квітня 2025 р.  
+Перевірив
+ст. викл. каф. ПЗ
+Сокорчук І. П. 
+
+
+
+
+
+Харків 2025
+2.1 Історія змін
+Таблиця 1.1 – Історія змін звіту
+	№
+	Дата
+	Версія звіту
+	Опис змін та виправлень
+	1
+	10.04.2025
+	0.1
+	Створено серверної (back-end) частини програмної системи
+	2
+	05.05.2025
+	0.2
+	Створено розділ «Аналіз завдання»,
+ «Хід роботи»,
+ «Висновки» та додатки
+«Додаток А», «Додаток Б», «Додаток В», «Додаток Г», «Додаток Д», «Додаток Е»
+	3
+	29.05.2025
+	0.3
+	Записано відео презентацію
+	4
+	31.05.2025
+	1.0
+	перевірено відповідність вимогам ДСТУ 3008:2015
+	
+
+________________
+
+
+2.2        Аналіз завдання  
+
+
+Метою лабораторної роботи є розробка серверної (back-end) частини програмної системи "Safe Home" для керування безпекою розумного дому. Система повинна забезпечувати реєстрацію та автентифікацію користувачів, керування оселями, пристроями, датчиками, підписками, адміністрування, обробку сповіщень та статистики. Серверна частина реалізована на Flask, використовує реляційну базу даних PostgreSQL, інтегрується з Firebase, Google OAuth, Stripe.
+
+
+2.3        Хід роботи
+
+
+2.3.1 Опис архітектури системи
+Загальна архітектура побудована за принципом багаторівневої системи:
+Клієнти: Мобільний додаток (Android), веб-інтерфейс (React SPA), IoT-пристрої (емулятор Wokwi).
+Серверна частина: Flask REST API, що обробляє всі запити, взаємодіє з базою даних, зовнішніми сервісами (Firebase, Google, Stripe).
+База даних: PostgreSQL (Azure Database for PostgreSQL).
+Зовнішні сервіси: Firebase (нотифікації), Google OAuth (авторизація), Stripe (оплата).
+
+
+2.3..2 Опис архітектури серверної частини
+Серверна частина має таку структуру (див. Package Diagram у Додатку 1):
+app/models — моделі бази даних (User, Role, Home, Sensor, Subscription тощо)
+app/repositories — репозиторії для доступу до даних
+app/services — бізнес-логіка (керування користувачами, підписками, статистикою)
+app/routes — REST API маршрути
+app/sockets — обробка WebSocket-підключень
+app/tasks — фонові задачі (збір статистики, email-розсилки)
+app/utils — утиліти (валидація, робота з Google/Firebase, email)
+app/db_config — ініціалізація та seed-дані для БД
+app/templates — шаблони email
+
+
+2.3.3. Опис UML діаграма прецедентів (Use Case Diagram)
+На діаграмі прецедентів  (Див. Додаток Б) зображено основних акторів системи: Користувач, Адміністратор, Супер адміністратор, IoT-пристрій, Платіжна система та Сервер. Для кожного актора показані доступні сценарії використання (прецеденти): реєстрація, вхід у систему (у тому числі через Google), керування акаунтом, оселями, датчиками, підписками, перегляд статистики, адміністрування користувачів, робота з тарифами, аудит, отримання сповіщень тощо. Діаграма також відображає взаємозв’язки між прецедентами (include, extend) та взаємодію із зовнішніми системами (IoT, платіжна система).
+
+
+2.3.4. Опис ER-модель даних (Entity–Relationship Model)
+ER-діаграма відображає структуру бази даних (Див. Додаток В). Основні сутності: user, role, home, sensor, mobile_device, subscription, subscription_plan, admin_audit_log, user_stats, subscription_plan_stats, general_user_notification, security_user_notification, default_security_mode.
+Показані всі ключові поля, типи даних та зв’язки між таблицями (один-до-багатьох, багато-до-одного).
+2.3.5. Опис UML діаграма розгортання (Deployment Diagram)
+Діаграма розгортання відображає фізичну інфраструктуру системи (Див. Додаток Г):
+* Azure App Service (Flask REST API) — хостинг бекенду;
+* Azure Database for PostgreSQL — база даних, розміщена у віртуальній мережі (VNet) разом із бекендом;
+* Azure App Service (React SPA) — хостинг frontend для адміністраторів;
+* Android Client (Kotlin) — мобільний додаток для користувачів;
+* Wokwi IoT Emulator — емулятор IoT-пристроїв;
+* Зовнішні сервіси: Google OAuth, Firebase Cloud Messaging, Stripe.
+Всі сервіси взаємодіють через захищені канали (HTTPS, VNet). Серверна частина (Flask backend) розгорнута на Azure App Service. База даних розгорнута на Azure Database for PostgreSQL. Обидва сервіси  находяться у спільній віртуальній мережі (VNet) для безпечної взаємодії. CI/CD для бекенду реалізовано через GitHub Actions: автоматичне тестування та деплой при зміні коду. Дані зберігаються у хмарній базі даних Azure PostgreSQL. Всі зовнішні інтеграції (Google OAuth, Firebase, Stripe) налаштовані через захищені канали.
+
+2.3.6. Опис UML діаграми пакетів (Package Diagram)
+Діаграма пакетів демонструє архітектуру серверної частини проєкту (Див. Додаток Д). Основні пакети:
+* models — містить моделі даних (користувачі, ролі, оселі, датчики, підписки, тощо);
+* repositories — класи для доступу до БД;
+* services — бізнес-логіка (керування користувачами, підписками, статистикою);
+* routes — REST API маршрути;
+* sockets — WebSocket-компоненти;
+* tasks — фонові задачі;
+* utils — утиліти (робота з email, Google, платежами);
+* db_config — ініціалізація та seed-дані для БД;
+* templates — шаблони email.
+Показані залежності між пакетами та класами: моделі використовуються у репозиторіях, репозиторії — у сервісах, сервіси — у маршрутах, утиліти — у сервісах, тощо.
+
+
+2.3.7 Опис REST API
+REST API реалізовано за принципами RESTful. Основні ендпоінти:
+* /api/auth/ — реєстрація, логін, Google OAuth, зміна пароля
+* /api/users/ — керування користувачами (CRUD)
+* /api/homes/ — керування оселями
+* /api/sensors/ — керування датчиками
+* /api/subscriptions/ — керування підписками, оплата через Stripe
+* /api/admin/ — адміністрування, аудит
+* /api/notifications/ — сповіщення
+* /api/statistics/ — статистика користувачів, підписок, графіки
+Взаємодія здійснюється через HTTP(S) запити з використанням сессії або JWT-токенів для авторизації.
+
+
+2.3.8 Опис програмних технологій
+Flask — основний фреймворк для серверної частини;
+SQLAlchemy — ORM для роботи з PostgreSQL;
+Flask-Migrate — міграції БД;
+Flask-Session — сесія роутів та WebSocket;
+Flask-SocketIO — WebSocket для реального часу;
+Flask-Mail — email-розсилки;
+Firebase Admin SDK — push-нотифікації;
+Authlib — Google OAuth;
+Stripe — інтеграція з платіжною системою.
+
+
+2.3.9 Опис програмної реалізації
+Код організовано за принципами чистої архітектури:
+* моделі — описують структуру даних;
+* репозиторії — інкапсулюють доступ до БД;
+* сервіси — містять бізнес-логіку;
+* роути — визначають API;
+* утиліти — допоміжні функції;
+* tasks — фонові задачі.
+
+
+2.4        Висновки        
+
+
+У ході виконання лабораторної роботи було розроблено серверну частину системи "Safe Home", реалізовано основні бізнес-процеси, забезпечено інтеграцію з зовнішніми сервісами, проведено тестування функціоналу. Отримані навички роботи з Flask, REST API, ORM, інтеграції з платіжними та нотифікаційними сервісами.
+
+
+
+
+________________
+
+
+ДОДАТОК А
+Відеозапис презентації результатів лабораторної роботи: 
+https://youtu.be/rAJmTD-1RZg
+Хронологічний опис відеозапису:
+* 00:00  --  Тема роботи
+* 00:15  --  Опис виконаної роботи
+* 00:45  --   Демонстрація деплою системи
+* 01:05  --   Функціональне тестування програмної системи функції користувача
+* 09:05  --   Функціональне тестування програмної системи користувача функцій адміністратора
+
+
+________________
+
+
+ДОДАТОК Б
+UML діаграму прецедентів (Use Case Diagram)
+  
+________________
+
+ДОДАТОК В
+ER-модель даних (діаграми) (Entity–Relationship Model)
+
+
+  
+________________
+
+ДОДАТОК Г
+UML діаграму розгортання (Deployment Diagram) 
+
+  
+________________
+
+ДОДАТОК Д
+UML діаграму пакетів (Package Diagram)
+  
+
+ДОДАТОК Е
+Програмний код
+Е.1. Приклад коду моделі
+GitHub репозиторій: https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab2/pzpi-22-7-lisovyi-nykyta-lab2/pzpi-22-7-lisovyi-nykyta-lab2-code/app/models/home.py
+
+1 from app import db 
+2 from sqlalchemy.sql import func
+3 import uuid
+
+
+4 class Home(db.Model):
+5     __tablename__ = 'home'
+6     __table_args__ = (
+7         db.Index('idx_home_user_id', 'user_id'),
+8         db.Index('idx_home_default_mode_id', 'default_mode_id'),
+9         db.Index('idx_home_is_archived', 'is_archived'),
+10        db.Index('idx_home_user_is_archived', 'user_id', 'is_archived'),
+11    )
+
+
+12    home_id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+13    user_id = db.Column(db.UUID(as_uuid=True), db.ForeignKey('user.user_id', ondelete='CASCADE'), nullable=False)
+14    default_mode_id = db.Column(db.UUID(as_uuid=True), db.ForeignKey('default_security_mode.mode_id'), nullable=False)
+15    name = db.Column(db.String(100), nullable=False)
+16    address = db.Column(db.String(255), nullable=False)
+17    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now())
+18    is_archived = db.Column(db.Boolean, default=False)
+
+
+19    user = db.relationship('User', back_populates='homes')
+20    default_mode = db.relationship('DefaultSecurityMode', back_populates='homes')
+
+
+21    sensors = db.relationship(
+22        'Sensor',
+23        back_populates='home',
+24        cascade="all, delete-orphan"
+25    )
+
+
+26    security_notifications = db.relationship(
+27        'SecurityUserNotification',
+28        back_populates='home',
+29        cascade="all, delete-orphan"
+30    )
+
+
+Е.2. Приклад коду репозиторія
+GitHub репозиторій: https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab2/pzpi-22-7-lisovyi-nykyta-lab2/pzpi-22-7-lisovyi-nykyta-lab2-code/app/repositories/home_repo.py
+
+1 from app.models import Home
+2 from app import db
+
+
+3 class HomeRepository:
+4     @staticmethod
+5     def get_all_by_user(user_id):
+6         return Home.query.filter_by(user_id=user_id).all()
+
+
+7     @staticmethod
+8     def get_by_id(home_id):
+9         return Home.query.get(home_id)
+
+
+10    @staticmethod
+11    def get_by_user_and_id(user_id, home_id):
+12        return Home.query.filter_by(home_id=home_id, user_id=user_id).first()
+
+
+13    @staticmethod
+14    def get_by_user_and_id_archived(user_id, home_id, is_archived):
+15        return Home.query.filter_by(user_id=user_id, home_id=home_id, is_archived=is_archived).first()
+
+
+16    @staticmethod
+17    def count_active_by_user(user_id):
+18        return Home.query.filter_by(user_id=user_id, is_archived=False).count()
+
+
+19    @staticmethod
+20    def add(home):
+21        db.session.add(home)
+22        db.session.commit()
+
+
+23    @staticmethod
+24    def update(home):
+25        db.session.commit()
+
+
+26    @staticmethod
+27    def delete(home):
+28        db.session.delete(home)
+29        db.session.commit()
+
+
+Е.3. Приклад коду сервісу
+GitHub репозиторій: https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab2/pzpi-22-7-lisovyi-nykyta-lab2/pzpi-22-7-lisovyi-nykyta-lab2-code/app/services/home_service.py
+
+1 from app.utils.error_handler import handle_errors, UnprocessableError, ValidationError
+2 from app.repositories.home_repo import HomeRepository
+3 from app.services.default_security_mode_service import DefaultSecurityModeService
+4 from app.services.subscription_service import SubscriptionService
+5 from app.services.notification import SecurityNotificationService
+6 from app.utils import Validator
+7 from app.models.home import Home
+8 from flask import jsonify
+
+
+9 class HomeService:
+10    @staticmethod
+11    @handle_errors
+12    def get_all_homes(user_id):
+13        homes = HomeRepository.get_all_by_user(user_id)
+14        homes_list = [
+15            {
+16                "home_id": str(home.home_id),
+17                "name": home.name,
+18                "address": home.address,
+19                "created_at": home.created_at.isoformat(),
+20                "default_mode_id": str(home.default_mode_id),
+21                "default_mode_name": home.default_mode.mode_name,
+22                "is_archived": home.is_archived
+23            } for home in homes
+24        ]
+25        return jsonify({"homes": homes_list}), 200
+
+
+26    @staticmethod
+27    @handle_errors
+28    def add_home(user_id, body):
+29        Validator.validate_required_fields(body, ['name', 'address'])
+
+
+30        current_subscription = SubscriptionService.get_current_subscription(user_id)
+31        if not current_subscription:
+32            raise UnprocessableError("User does not have an active subscription.")
+
+
+33        current_homes_count = HomeRepository.count_active_by_user(user_id)
+34        if current_homes_count >= current_subscription.plan.max_homes:
+35            raise UnprocessableError("You have reached the maximum number of homes allowed by your subscription.")
+
+
+36        default_mode = DefaultSecurityModeService.get_security_mode("disarmed")
+
+
+37        new_home = Home(
+38            user_id=user_id,
+39            name=body['name'],
+40            address=body['address'],
+41            default_mode_id=default_mode.mode_id
+42        )
+43        HomeRepository.add(new_home)
+44        return jsonify({"message": "Home added successfully."}), 201
+
+
+45    @staticmethod
+46    @handle_errors
+47    def delete_home(user_id, home_id):
+48        home = HomeRepository.get_by_user_and_id(user_id, home_id)
+49        if not home:
+50            raise UnprocessableError("Home not found for the user.")
+
+
+51        HomeRepository.delete(home)
+52        return jsonify({"message": "Home was deleted successfully."}), 200
+
+
+Е.4. Приклад коду роутів
+GitHub репозиторій: https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab2/pzpi-22-7-lisovyi-nykyta-lab2/pzpi-22-7-lisovyi-nykyta-lab2-code/app/routes/home_routes.py
+
+1 from flask import Blueprint, request
+2 from app.services.home_service import HomeService
+3 from app.utils.auth_decorator import auth_required, role_required
+4 from app.utils.error_handler import handle_errors
+5 from flasgger import swag_from
+6 
+7 home_bp = Blueprint('home', __name__)
+8 
+9 @home_bp.route('/homes', methods=['GET'])
+10 @swag_from({
+11     'tags': ['Home'],
+12     'summary': 'Get all homes for the authenticated user',
+13     'responses': {
+14         200: {
+15             'description': 'List of homes',
+16             'schema': {
+17                 'type': 'object',
+18                 'properties': {
+19                     'homes': {
+20                         'type': 'array',
+21                         'items': {
+22                             'type': 'object',
+23                             'properties': {
+24                                 'home_id': {'type': 'string'},
+25                                 'name': {'type': 'string'},
+26                                 'address': {'type': 'string'},
+27                                 'created_at': {'type': 'string'},
+28                                 'default_mode_id': {'type': 'string'},
+29                                 'default_mode_name': {'type': 'string'},
+30                                 'is_archived': {'type': 'boolean'}
+31                             }
+32                         }
+33                     }
+34                 }
+35             }
+36         },
+37         401: {'description': 'Unauthorized'},
+38         500: {'description': 'Internal server error'}
+39     }
+40 })
+41 @role_required(['user'])
+42 @handle_errors
+43 def get_all_homes():
+44     user_id = request.current_user.user_id
+45     return HomeService.get_all_homes(user_id)
+46 
+47 @home_bp.route('/homes', methods=['POST'])
+48 @swag_from({
+49     'tags': ['Home'],
+50     'summary': 'Add a new home for the authenticated user',
+51     'parameters': [
+52         {
+53             'name': 'body',
+54             'in': 'body',
+55             'required': True,
+56             'schema': {
+57                 'type': 'object',
+58                 'properties': {
+59                     'name': {'type': 'string'},
+60                     'address': {'type': 'string'}
+61                 },
+62                 'required': ['name', 'address']
+63             }
+64         }
+65     ],
+66     'responses': {
+67         201: {'description': 'Home added successfully'},
+68         400: {'description': 'Validation error'},
+69         401: {'description': 'Unauthorized'},
+70         422: {'description': 'Unprocessable entity'},
+71         500: {'description': 'Internal server error'}
+72     }
+73 })
+74 @role_required(['user'])
+75 @handle_errors
+76 def add_home():
+77     user_id = request.current_user.user_id
+78     return HomeService.add_home(user_id, request.json)
+
+
+Е.5. Приклад веб сокетів
+GitHub репозиторій: https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab2/pzpi-22-7-lisovyi-nykyta-lab2/pzpi-22-7-lisovyi-nykyta-lab2-code/app/sockets/admin_audit_logs_sockets.py
+
+1 from flask_socketio import SocketIO, emit, join_room
+2 from app.repositories import AdminAuditLogRepository
+3 from app.utils.auth_socket_decorator import socketio_role_required
+4 from app.utils import Validator
+5 from app.utils.error_handler import socketio_handle_errors
+6 
+7 def admin_audit_logs_sockets(socketio):
+8     @socketio.on('subscribe_admin_audit_logs')
+9     @socketio_handle_errors
+10     @socketio_role_required(['admin', 'super_admin'])
+11     def handle_subscribe_admin_audit_logs(data):
+12         days = data.get('days')
+13 
+14         if days is not None:
+15             Validator.validate_positive_integer(days, "days")
+16             logs = AdminAuditLogRepository.get_audit_logs_by_days(days)
+17         else:
+18             logs = AdminAuditLogRepository.get_all()
+19 
+20         join_room('admin_audit_logs')
+21 
+22         emit('admin_audit_logs_init', {
+23             'admin_audit_logs': [AdminAuditLogRepository.to_dict(log) for log in logs]
+24         })
+
+
+Е.6. Код обробки помилок
+GitHub репозиторій: https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab2/pzpi-22-7-lisovyi-nykyta-lab2/pzpi-22-7-lisovyi-nykyta-lab2-code/app/utils/error_handler.py
+
+1 from flask import jsonify
+2 from functools import wraps
+3 import logging
+4 import traceback
+5 from flask_socketio import disconnect, emit
+6 from werkzeug.exceptions import HTTPException, BadRequest, NotFound, Forbidden, Unauthorized, MethodNotAllowed, InternalServerError, UnprocessableEntity
+7 
+8 logger = logging.getLogger(__name__)
+9 
+10 class ValidationError(Exception):
+11     def __init__(self, message):
+12         super().__init__(message)
+13         self.message = message
+14         self.status_code = 400
+15 
+16 class ResourceNotFoundError(Exception):
+17     def __init__(self, message):
+18         super().__init__(message)
+19         self.message = message
+20         self.status_code = 404
+21 
+22 class UnprocessableError(Exception):
+23     def __init__(self, message):
+24         super().__init__(message)
+25         self.message = message
+26         self.status_code = 422
+27 
+28 class DatabaseError(Exception):
+29     def __init__(self, message):
+30         super().__init__(message)
+31         self.message = message
+32         self.status_code = 500
+33 
+34 class AuthError(Exception):
+35     def __init__(self, message):
+36         super().__init__(message)
+37         self.message = message
+38         self.status_code = 403
+39 
+40 class UnauthorizedError(Exception):
+41     def __init__(self, message):
+42         super().__init__(message)
+43         self.message = message
+44         self.status_code = 401
+45 
+46 def format_error_response(message, status_code):
+47     return jsonify({"error": message}), status_code
+48 
+49 def handle_errors(f):
+50     @wraps(f)
+51     def decorated_function(*args, **kwargs):
+52         try:
+53             return f(*args, **kwargs)
+54         except ValidationError as ve:
+55             logger.error(f"Validation error: {ve.message}\n")
+56             return format_error_response(ve.message, ve.status_code)
+57         except ResourceNotFoundError as rnf:
+58             logger.error(f"Resource not found error: {rnf.message}\n")
+59             return format_error_response(rnf.message, rnf.status_code)
+60         except UnprocessableError as ue:
+61             logger.error(f"Unprocessable error: {ue.message}\n")
+62             return format_error_response(ue.message, ue.status_code)
+63         except DatabaseError as de:
+64             logger.error(f"Database error: {de.message}\n")
+65             return format_error_response(de.message, de.status_code)
+66         except AuthError as ae:
+67             logger.error(f"Auth error: {ae.message}\n")
+68             return format_error_response(ae.message, ae.status_code)
+69         except UnauthorizedError as ue:
+70             logger.error(f"Unauthorized error: {ue.message}\n")
+71             return format_error_response(ue.message, ue.status_code)
+72         except Exception as e:
+73             logger.error(f"Unexpected error: {str(e)}\n")
+74             return format_error_response("An unexpected error occurred", 500)
+75     return decorated_function
+
+
+Е.7. Код аутентифікації
+GitHub репозиторій: https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab2/pzpi-22-7-lisovyi-nykyta-lab2/pzpi-22-7-lisovyi-nykyta-lab2-code/app/utils/auth_decorator.py
+
+1  from functools import wraps
+2  from flask import request, g
+3  from app.utils import JwtUtils
+4  from app.models import User
+5  from flask_login import current_user
+6  from app.utils.error_handler import UnauthorizedError, AuthError, handle_errors
+7  import logging
+8  
+9  logger = logging.getLogger(__name__)
+10 
+11 def authenticate_user():
+12     """Common feature for checking authentication via JWT or session."""
+13     # Check JWT
+14     token = request.headers.get('Authorization')
+15     if token:
+16         try:
+17             if token.startswith("Bearer "):
+18                 token = token.split(" ")[1]
+19 
+20             payload = JwtUtils.decode_jwt(token)
+21             user = User.query.get(payload['user_id'])
+22             if not user:
+23                 logger.error(f"User with ID '{payload['user_id']}' not found during authentication")
+24                 raise UnauthorizedError("User not found or invalid token")
+25             return user
+26         except Exception as e:
+27             raise
+28 
+29     # Session verification via Flask-Login
+30     if current_user.is_authenticated:
+31         return current_user
+32 
+33     logger.error("Authentication failed: No token or session provided")
+34     raise UnauthorizedError("Authentication required")
+35 
+36 def auth_required(f):
+37     @wraps(f)
+38     @handle_errors
+39     def decorated(*args, **kwargs):
+40         user = authenticate_user()
+41         request.current_user = user
+42         g.user = user
+43         return f(*args, **kwargs)
+44     return decorated
+45 
+46 def role_required(roles):
+47     def decorator(f):
+48         @wraps(f)
+49         @handle_errors
+50         def decorated(*args, **kwargs):
+51             user = authenticate_user()
+52 
+53             if user.role.role_name not in roles:
+54                 logger.error(f"Access denied for user {user.user_id}: Required roles {roles}, user role {user.role.role_name}")
+55                 raise AuthError(f"User does not have the required role. Required roles: {roles}")
+56 
+57             request.current_user = user
+58             g.user = user
+59             return f(*args, **kwargs)
+60         return decorated
+61     return decorator
+
+
+Е.8. Код ініціалізації проекту
+GitHub репозиторій: https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab2/pzpi-22-7-lisovyi-nykyta-lab2/pzpi-22-7-lisovyi-nykyta-lab2-code/app/app.py
+
+1  import logging
+2  import firebase_admin
+3  import stripe
+4  from authlib.integrations.flask_client import OAuth
+5  from firebase_admin import credentials
+6  from flask import Flask
+7  from flask_apscheduler import APScheduler
+8  from flask_cors import CORS
+9  from flask_login import LoginManager
+10 from flask_mail import Mail
+11 from flask_sqlalchemy import SQLAlchemy
+12 from flasgger import Swagger
+13 from flask_migrate import Migrate
+14 from flask_socketio import SocketIO
+15 from app.config import Config, setup_logging
+16 
+17 db = SQLAlchemy()
+18 login_manager = LoginManager()
+19 oauth = OAuth()
+20 mail = Mail()
+21 scheduler = APScheduler()
+22 migrate = Migrate()
+23 socketio = SocketIO()
+24 
+25 def create_app():
+26     app = Flask(__name__)
+27 
+28     app.config.from_object(Config)
+29 
+30     setup_logging(app)
+31 
+32     logger = logging.getLogger(__name__)
+33     logger.info("Initializing Flask application")
+34 
+35     if app.config['DEV_MODE']:
+36         logger.info("Running in development mode")
+37         CORS(app,
+38              origins=app.config['CORS_ALLOW_ORIGINS'],
+39              methods=app.config['CORS_ALLOW_METHODS'],
+40              supports_credentials=app.config['CORS_SUPPORTS_CREDENTIALS'],
+41              allow_headers=app.config['CORS_ALLOW_HEADERS'],
+42              max_age=app.config['CORS_MAX_AGE'])
+43     else:
+44         logger.info("Running in production mode")
+45         CORS(app,
+46              methods=app.config['CORS_ALLOW_METHODS'],
+47              allow_headers=app.config['CORS_ALLOW_HEADERS'],
+48              max_age=app.config['CORS_MAX_AGE'])
+49 
+50     db.init_app(app)
+51     migrate.init_app(app, db)
+52     login_manager.init_app(app)
+53     oauth.init_app(app)
+54     mail.init_app(app)
+55     scheduler.init_app(app)
+56     socketio.init_app(app, cors_allowed_origins="*", manage_session=False)
+57 
+58     stripe.api_key = app.config["STRIPE_SECRET_KEY"]
+59 
+60     from app.utils.google_services_json_constructor import create_filled_service_account
+61     path_to_filled_json = create_filled_service_account('google-template.json')
+62     cred = credentials.Certificate(path_to_filled_json)
+63     firebase_admin.initialize_app(cred)
+64 
+65     app.config['SWAGGER'] = {
+66         'title': 'Your API Documentation',
+67         'uiversion': 3,
+68         'specs_route': '/apidocs/',
+69     }
+70     swagger = Swagger(app)
+71 
+72     # These imports register models in db.metadata for Flask-Migrate
+73     from .models import User, Role, SubscriptionPlan, DefaultSecurityMode, Sensor, Home, MobileDevice
+74     from .models import GeneralUserNotification, SecurityUserNotification, Subscription, AdminAuditLog
+75     from .models import UserStats, SubscriptionPlanStats
+76 
+77     from .db_config import init_seed_cli, seed_data
+78     init_seed_cli(app)
+79 
+80     if app.config['AUTO_DB_SETUP']:
+81         with app.app_context():
+82             from flask_migrate import upgrade
+83             upgrade()  # Apply migrations
+84             force = app.config['SEED_FORCE']
+85             seed_data(app, force=force)
+86 
+87     from .sockets import init_sockets
+88     init_sockets(socketio)
+89 
+90     from .routes import init_routes
+91     init_routes(app)
+92 
+93     from .tasks import init_tasks
+94     init_tasks(app, scheduler)
+95     scheduler.start()
+96 
+97     return app
