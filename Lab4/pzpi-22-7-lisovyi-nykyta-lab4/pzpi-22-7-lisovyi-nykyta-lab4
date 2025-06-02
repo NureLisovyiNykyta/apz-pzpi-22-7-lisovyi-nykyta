@@ -1,0 +1,590 @@
+Міністерство освіти і науки України
+Харківський національний університет радіоелектроніки
+Кафедра програмної інженерії
+ 
+ 
+Лабораторна робота 
+з дисципліни «Архітектура програмного забезпечення»
+з теми: « Розробка програмної архітектури, створення та відлагодження програмного коду веб клієнта програмної системи »  
+
+
+Виконав
+ст. гр. ПЗПІ-22-7
+Лісови Нікіта Андрійович
+31 травня 2025 р.  
+Перевірив
+ст. викл. каф. ПЗ
+Сокорчук І. П. 
+
+
+
+
+
+Харків 2025
+4.1 Історія змін
+Таблиця 1.1 – Історія змін звіту
+	№
+	Дата
+	Версія звіту
+	Опис змін та виправлень
+	1
+	01.05.2025
+	0.1
+	Створено клієнтської (front-end) частини частини програмної системи
+	2
+	20.05.2025
+	0.2
+	Створено розділ «Аналіз завдання»,
+ «Хід роботи»,
+ «Висновки» та додатки
+«Додаток А», «Додаток Б», «Додаток В», «Додаток Г», «Додаток Д», «Додаток Е», «Додаток Є»
+	3
+	29.05.2025
+	0.3
+	Записано відео презентацію
+	4
+	31.05.2025
+	1.0
+	перевірено відповідність вимогам ДСТУ 3008:2015
+	
+
+________________
+
+
+4.2        Аналіз завдання  
+
+
+Метою лабораторної роботи є розробка клієнтської (front-end) частини програмної системи "Safe Home", яка забезпечує адміністрування, керування користувачами, підписками, статистикою та інтеграцію з бекендом через REST API. Веб-клієнт повинен підтримувати інтернаціоналізацію, локалізацію, захист даних та сучасний UI/UX.
+
+
+4.3        Хід роботи
+
+
+4.3.1 Опис архітектури веб-клієнта
+Веб-клієнт реалізовано як односторінковий додаток (SPA) на React. Архітектура побудована за компонентним принципом:
+* App — головний компонент, що керує маршрутизацією та контекстом авторизації.
+* Pages — окремі сторінки для адміністрування користувачів, підписок, статистики, аудиту, авторизації, головна сторінка, сторінка помилки.
+* Components — багаторазові компоненти: таблиці, модальні вікна, форми, графіки, навігація, спінери тощо.
+* Configs — налаштування API, локалізації.
+* Contexts — контекст авторизації.
+* Locales — файли локалізації (en, ua).
+Взаємодія з сервером здійснюється через REST API та WebSocket для реального часу (наприклад, для аудиту).
+
+
+4.3.2 Опис програмних технологій та компонентів
+React — основний фреймворк для SPA.
+React Router — маршрутизація сторінок.
+i18next — інтернаціоналізація та локалізація.
+Socket.IO — WebSocket для аудиту.
+Axios — HTTP-клієнт для API.
+Chart.js — побудова графіків.
+Docker, Nginx — деплой та продакшн.
+Azure App Service — хостинг фронтенду.
+Azure Pipelines — CI/CD для автоматизації збірки та деплою з GitHub.
+
+
+4.3.3. Опис бізнес-логіки
+Веб-клієнт дозволяє:
+* авторизуватися (звичайний логін, Google OAuth);
+* переглядати, додавати, редагувати, видаляти користувачів (для адміністраторів);
+* керувати підписками, тарифами, переглядати історію оплат;
+* переглядати та фільтрувати аудит-логи;
+* переглядати статистику (графіки, діаграми);
+* керувати адміністраторами (для супер-адміна);
+* змінювати пароль, виходити з системи;
+* отримувати повідомлення про помилки та статуси дій.
+
+
+4.3.3. Захист даних у веб-клієнті
+Всі запити до API здійснюються через HTTPS. Для авторизації використовується JWT-токен, що зберігається у cookies. Всі персональні дані користувачів захищені, доступ до адміністративних функцій мають лише авторизовані користувачі з відповідною роллю. Валідація даних на клієнті та сервері.
+
+
+4.3.5. Взаємодія з іншими компонентами системи
+Веб-клієнт взаємодіє з бекендом через REST API (CRUD операції, отримання статистики, аудит). Для реального часу (аудит-лог) використовується WebSocket. Для авторизації через Google — інтеграція з Google OAuth.
+
+4.3.6. Підтримка інтернаціоналізації та локалізації
+Використовується бібліотека i18next. Реалізовано перемикач мови (у компоненті LanguageSwitcher). Підтримуються англійська та українська мови (файли en.json, ua.json). Формати дат, часу, чисел, одиниці вимірювання адаптовані під обрану мову.
+
+
+4.3.7 Функціональність для адміністрування
+* управління користувачами (додавання, редагування, видалення);
+* управління підписками та тарифами;
+* перегляд та фільтрація аудит-логів;
+* перегляд статистики (графіки, діаграми);
+* додавання/видалення адміністраторів (для супер-адміна);
+* зміна пароля, вихід з системи.
+
+
+4.3.8 Опис деплою та DevOps
+Azure App Service — хостинг React frontend.
+Azure Pipelines — автоматизація збірки та деплою фронтенду з GitHub (Docker-образ).
+Nginx — використовується для роздачі зібраного додатку.
+CI/CD — кожна зміна у репозиторії автоматично збирається та деплоїться на Azure.
+Захист — весь трафік через HTTPS, інтеграція з бекендом через захищені API.
+
+
+4.3.9 Опис UML діаграма прецедентів (Use Case Diagram)
+Діаграма (Див. Додаток Б) демонструє основні сценарії використання веб-клієнта для адміністратора: вхід у систему, перегляд та керування користувачами, підписками, тарифами, аудит-логами, статистикою, адміністрування адміністраторів, зміна пароля, підтвердження email, вхід через Google. Відображено зв’язки include/extend між прецедентами.
+
+
+4.3.10 Опис UML діаграма компонент (Component Diagram)
+Діаграма (Див. Додаток В) показує основні компоненти веб-клієнта: App, сторінки (CustomersPage, AdminsPage, SubscriptionsPage, StatisticsPage, AuditLogPage, Homepage, NotFoundPage), загальні компоненти (TablePage, Modal, Card), компоненти навігації та авторизації (Navigation, LoginForm, RegisterForm, UserPanel, AuthContext, GoogleOAuth, Firebase), утиліти (api.js, i18n, locale.js), графіки (UserCountChart, PlanChart). Показано залежності між компонентами.
+
+
+4.3.11 Опис UML діаграма пакетів (Package Diagram)
+Діаграма (Див. Додаток Г) відображає структуру проєкту:
+* src/pages — сторінки додатку;
+* src/components — багаторазові компоненти;
+* src/configs — налаштування;
+* src/contexts — контексти;
+* src/locales — файли локалізації.
+Показані залежності між сторінками, компонентами, утилітами, контекстами.
+
+
+4.3.12 Опис UML діаграма діяльності (Activity Diagram)
+Діаграма (Див. Додаток Д) ілюструє основний workflow адміністратора та супер-адміна: авторизація, робота з користувачами, підписками, адміністраторами, аудитом, статистикою, зміна пароля, підтвердження дій через API.
+
+
+4.3.13 UML діаграму взаємодії (Interaction Overview Diagram);
+Дана діаграма (Див. Додаток Е) діяльності ілюструє основний сценарій взаємодії користувача з веб-клієнтом системи "Safe Home".
+Користувач відкриває додаток. Компонент App ініціалізується, визначає мову інтерфейсу (через locale.js або cookies) та перевіряє авторизацію користувача за допомогою AuthContext.
+Якщо користувач неавторизований, відображається форма входу (LoginForm). Користувач вводить дані, LoginForm надсилає запит до API (/login), після чого AuthContext оновлює стан авторизації. У разі успіху відбувається переадресація на сторінку /admin/customers, у разі помилки — показується повідомлення про помилку.
+Якщо користувач авторизований, відображається Navigation. Користувач може переходити по меню, а App рендерить відповідну сторінку (Customers, Admins, Subscriptions, AuditLog, Statistics).
+Кожна сторінка робить запит до API (через api.js), отримує та відображає дані. Доступні дії: додавання, редагування, видалення, перегляд інформації.
+Для авторизації через Google використовується Google OAuth. Для push-нотифікацій інтегровано Firebase.
+
+
+4.4        Висновки        
+У ході виконання лабораторної роботи було розроблено сучасний веб-клієнт для системи "Safe Home", реалізовано всі вимоги до адміністрування, локалізації, захисту даних, інтеграції з бекендом та зовнішніми сервісами. Проведено тестування функціоналу, налаштовано автоматичний деплой на Azure.
+
+
+________________
+
+
+ДОДАТОК А
+Відеозапис презентації результатів лабораторної роботи: 
+https://youtu.be/1jrVHLbeY3g
+Хронологічний опис відеозапису:
+* 00:00  --  Тема роботи
+* 00:15  --  Опис виконаної роботи
+* 01:15  --   Опис деплою
+* 01:35  --   Функціональне тестування клієнтської веб частина  програмної системи
+
+
+________________
+
+
+ДОДАТОК Б
+UML діаграму прецедентів (Use Case Diagram)
+  
+
+________________
+
+
+ДОДАТОК В
+UML діаграму компонент (Component Diagram)  
+________________
+ДОДАТОК Г
+UML діаграму пакетів (Package Diagram)
+  
+
+________________
+
+
+ДОДАТОК Д
+UML діаграму діяльності (Activity Diagram)
+
+
+  
+________________
+
+ДОДАТОК Е
+UML діаграму взаємодії (Interaction Overview Diagram)
+
+
+
+ДОДАТОК Є
+Програмний код
+Є.1. Код точки входу React
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab4/pzpi-22-7-lisovyi-nykyta-lab4/pzpi-22-7-lisovyi-nykyta-lab4-code/src/index.js
+
+1  import React from 'react';
+2  import ReactDOM from 'react-dom/client';
+3  import App from './components/app';
+4  import './configs/locale';
+5  import { CookiesProvider } from 'react-cookie';
+6  import { BrowserRouter as Router } from 'react-router-dom';
+7  import { AuthProvider } from './contexts/auth-context';
+
+
+8  const root = ReactDOM.createRoot(document.getElementById('root'));
+9  root.render(
+10   <React.StrictMode>
+11     <CookiesProvider>
+12       <Router>
+13         <AuthProvider>
+14           <App />
+15         </AuthProvider>
+16       </Router>
+17     </CookiesProvider>
+18   </React.StrictMode>
+19 );
+
+
+Є.2. Код App.jsx 
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab4/pzpi-22-7-lisovyi-nykyta-lab4/pzpi-22-7-lisovyi-nykyta-lab4-code/src/components/app/index.js
+
+1  import './index.css';
+2  import Navigation from '../navigation';
+3  import NotFound from '../../pages/not-found';
+4  import Customers from '../../pages/customers';
+5  import Admins from '../../pages/admins';
+6  import Subscriptions from '../../pages/subscriptions';
+7  import UserSubscriptions from '../../pages/user-subscriptions';
+8  import AuditLog from '../../pages/audit-log';
+9  import { Routes, Route } from "react-router-dom";
+10 import { useEffect, useContext } from 'react';
+11 import { useCookies } from 'react-cookie';
+12 import i18n from '../../configs/locale';
+13 import { AuthContext } from '../../contexts/auth-context';
+14 import { LoginForm } from '../forms/login';
+15 import Statistics from '../../pages/statistics';
+16 import Homepage from '../../pages/homepage';
+17 import { useLocation } from 'react-router-dom';
+
+
+18 const App = () => {
+19   const [cookies, setCookie] = useCookies(['language']);
+20   const { isAuthenticated } = useContext(AuthContext);
+21   const location = useLocation();
+
+
+22   useEffect(() => {
+23     const currentLanguage = cookies.language || 'en';
+24     i18n.changeLanguage(currentLanguage);
+25   }, [cookies.language]); 
+
+
+26   const changeLanguage = (language) => {
+27     i18n.changeLanguage(language);
+28     setCookie('language', language, { path: '/', maxAge: 24 * 60 * 60 });
+29   };
+
+
+30   return (
+31     <div className="app">
+32       {isAuthenticated &&
+33         location.pathname !== '/' &&
+34         location.pathname !== '/login' &&
+35         <Navigation changeLanguage={changeLanguage} />}
+36       <Routes>
+37         <Route path='/' element={<Homepage />} />
+38         <Route path='/login' element={<LoginForm changeLanguage={changeLanguage} />} />
+39         <Route path='/admin/*'>
+40           <Route path='customers' element={<Customers />} />
+41           <Route path='customers/user/:userId' element={<UserSubscriptions />} />
+42           <Route path='admins' element={<Admins />} />
+43           <Route path='subscriptions' element={<Subscriptions />} />
+44           <Route path='audit-log' element={<AuditLog />} />
+45           <Route path='statistics/*' element={<Statistics />} />
+46         </Route>
+47         <Route path='*' element={<NotFound />} />
+48       </Routes>
+49     </div>
+50   );
+51 };
+
+
+52 export default App;
+
+
+Є.3. Приклад коду сторінки
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab4/pzpi-22-7-lisovyi-nykyta-lab4/pzpi-22-7-lisovyi-nykyta-lab4-code/src/pages/homepage/index.js
+
+1  import { Link } from 'react-router-dom';
+2  import './index.css';
+3  import homelogo from './home-logo.jpg';
+4  import appimage from './app-image.jpg';
+5  import aboutproject from './about-project.jpg';
+6  import { GoShieldCheck } from "react-icons/go";
+7  import { TbViewportWide } from "react-icons/tb";
+8  import { IoPersonOutline } from "react-icons/io5";
+9  import { GoLock } from "react-icons/go";
+10 import { MdOutlineSavings } from "react-icons/md";
+11 import { IoMdSquare } from "react-icons/io";
+12 import { useEffect, useRef } from 'react';
+
+
+13 const Homepage = () => {
+14   const elementsRef = useRef([]);
+
+
+15   useEffect(() => {
+16     const observer = new IntersectionObserver(
+17       (entries) => {
+18         entries.forEach((entry) => {  
+19           if (entry.isIntersecting) {
+20             entry.target.classList.add('visible');
+21             observer.unobserve(entry.target);
+22           }
+23         });
+24       },
+25       { threshold: 0.1 }
+26     );
+
+
+27     elementsRef.current.forEach((element) => {
+28       if (element) observer.observe(element);
+29     });
+
+
+30     return () => {
+31       elementsRef.current.forEach((element) => {
+32         if (element) observer.unobserve(element);
+33       });
+34     };
+35   }, []);
+
+
+36   const addToRefs = (el) => {
+37     if (el && !elementsRef.current.includes(el)) {
+38       elementsRef.current.push(el);
+39     }
+40   };
+
+
+41   return (
+42     <div className="homepage">
+43       <header className='header' ref={addToRefs}>
+44         <h3 className="title">Safe Home</h3>
+45         <Link to="/login" className="login-link">
+46           Authorize
+47         </Link>
+48       </header>
+49       <main className="content">
+50         <div className='main-content'>
+51           <div className='intro' ref={addToRefs}>
+52             <div className='left-column'>
+53               <h1>Safe Home: Comprehensive Home Security Management System</h1>
+54               <p>Safe Home integrates door opening sensors with a powerful backend, a user-friendly web interface, and a mobile application. Control your home's security in real-time and enjoy peace of mind and protection. Perfectly suited for any residence, from apartments to large mansions.</p>
+55               <button className="download-mobile-app">
+56                 Download mobile app
+57               </button>
+58             </div>
+59             <div className='right-column'>
+60               <img src={homelogo} alt="Safe Home Logo" className="home-logo" />
+61             </div>
+62           </div>
+63           <div className='features' ref={addToRefs}>
+64             <div className='left-column'>
+65               <h2>Why Safe Home?</h2>
+66               <div className='feature' ref={addToRefs}>
+67                 <h3>Constant Monitoring</h3>
+68                 <p>Protecting your home 24/7 with instant notifications and remote control.</p>
+69               </div>
+70               <div className='feature' ref={addToRefs}>
+71                 <h3>Convenient Control</h3>
+72                 <p>Intuitive web interface and iOS/Android mobile application.</p>
+73               </div>
+74               <div className='feature' ref={addToRefs}>
+75                 <h3>Quick Installation</h3>
+76                 <p>Simple setup and support for comfortable, hassle-free use.</p>
+77               </div>
+78               <div className='feature' ref={addToRefs}>
+79                 <h3>Technical Support</h3>
+80                 <p>Free expert assistance to resolve any questions and issues.</p>
+81               </div>
+82             </div>
+83             <div className='right-column'>
+84               <img src={appimage} alt="Safe Home mobile app" className="mobile-app-image" />
+85             </div>
+86           </div>
+87           <div className='advantages' ref={addToRefs}>
+88             <h2>Advantages of Safe Home</h2>
+89             <div className='list'>
+90               <div className='advantage' ref={addToRefs}>
+91                 <div className='icon'><GoShieldCheck /></div>
+92                 <h3>Maximum Reliability</h3>
+93                 <p>Advanced technologies to protect your home.</p>
+94               </div>
+95               <div className='advantage' ref={addToRefs}>
+96                 <div className='icon'><TbViewportWide /></div>
+97                 <h3>Flexible Scalability</h3>
+98                 <p>Suitable for any size and type of dwelling.</p>
+99               </div>
+100              <div className='advantage' ref={addToRefs}>
+101                <div className='icon'><IoPersonOutline /></div>
+102                <h3>Ease of Use</h3>
+103                <p>User-friendly interface accessible to all users.</p>
+104              </div>
+105              <div className='advantage' ref={addToRefs}>
+106                <div className='icon'><GoLock /></div>
+107                <h3>Data Security</h3>
+108                <p>Encryption and protection against unauthorized access.</p>
+109              </div>
+110              <div className='advantage' ref={addToRefs}>
+111                <div className='icon'><MdOutlineSavings /></div>
+112                <h3>Cost Savings</h3>
+113                <p>Reduce expenses on insurance and external security systems.</p>
+114              </div>
+115            </div>
+116          </div>
+117          <div className='about-project' ref={addToRefs}>
+118            <div className='columns'>
+119              <div className='left-column'>
+120                <img src={aboutproject} alt="About project" className="about-project-image" />
+121              </div>
+122              <div className='right-column'>
+123                <h2 ref={addToRefs}>About Our Project</h2>
+124                <div className='list'>
+125                  <div className='item' ref={addToRefs}>
+126                    <div className='square'><IoMdSquare /></div>
+127                    <div className='column'>
+128                      <h3>Our Mission</h3>
+129                      <p>To empower users with innovative, reliable, and user-friendly home security solutions.</p>
+130                    </div>
+131                  </div>
+132                  <div className='item' ref={addToRefs}>
+133                    <div className='square'><IoMdSquare /></div>
+134                    <div className='column'>
+135                      <h3>Our Vision</h3>
+136                      <p>To become the leading provider of smart home security systems globally, ensuring peace of mind for every household.</p>
+137                    </div>
+138                  </div>
+139                  <div className='item' ref={addToRefs}>
+140                    <div className='square'><IoMdSquare /></div>
+141                    <div className='column'>
+142                      <h3>Our Journey</h3>
+143                      <p>Discover how we're transforming home security, from initial concept to widespread adoption and continuous improvement.</p>
+144                    </div>
+145                  </div>
+146                </div>
+147              </div>
+148            </div>
+149          </div>
+150        </div>
+151        <footer className="footer" ref={addToRefs}>
+152          <p>© {new Date().getFullYear()} Safe Home. All rights reserved.</p>
+153        </footer>
+154      </main>
+155    </div>
+156  );
+157 }
+
+
+158 export default Homepage;
+
+
+Є.4. Код ініціалізації api
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab4/pzpi-22-7-lisovyi-nykyta-lab4/pzpi-22-7-lisovyi-nykyta-lab4-code/src/configs/api.js
+
+1 import axios from 'axios';
+2 const api = axios.create({
+3   baseURL: 'https://safe-home-backend-d2f2atb3d0eee9ay.northeurope-01.azurewebsites.net/api',
+4   withCredentials: true,
+5   headers: {
+6     'Content-Type': 'application/json',
+7   },
+8 });
+9 export default api;
+
+
+
+
+Є.5. Код ініціалізації локалізації
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab4/pzpi-22-7-lisovyi-nykyta-lab4/pzpi-22-7-lisovyi-nykyta-lab4-code/src/configs/locale.js
+
+1 import i18n from 'i18next';
+2 import { initReactI18next } from 'react-i18next';
+3 import translationEN from '../locales/en.json';
+4 import translationUA from '../locales/ua.json';
+5 const resources = {
+6   en: { translation: translationEN },
+7   ua: { translation: translationUA },
+8 };
+9 i18n
+10  .use(initReactI18next)
+11  .init({
+12    resources,
+13    lng: 'en',
+14    fallbackLng: 'en',
+15    interpolation: {
+16      escapeValue: false,
+17    },
+18  });
+19 export default i18n;
+
+
+Є.6. Код контексту аутентифікаціїЇ
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab4/pzpi-22-7-lisovyi-nykyta-lab4/pzpi-22-7-lisovyi-nykyta-lab4-code/src/contexts/auth-context.js
+
+1 import { createContext, useState, useEffect, useContext } from 'react';
+2 import { useNavigate, useLocation } from 'react-router-dom';
+3 import api from '../configs/api';
+4 export const AuthContext = createContext();
+5 export const useAuth = () => useContext(AuthContext);
+6 export const AuthProvider = ({ children }) => {
+7   const [isAuthenticated, setIsAuthenticated] = useState(false);
+8   const [userData, setUserData] = useState(null);
+9   const [loading, setLoading] = useState(true);
+10  const navigate = useNavigate();
+11  const location = useLocation();
+12  const allowedRoles = ['admin', 'super_admin'];
+13  const login = () => {
+14    setIsAuthenticated(true);
+15  };
+16  const logout = async () => {
+17    try {
+18      await api.post('/logout');
+19    } catch (error) {
+20      console.error("Logout failed:", error.message);
+21    } finally {
+22      setIsAuthenticated(false);
+23      setUserData(null);
+24      navigate('/login');
+25    }
+26  };
+27  useEffect(() => {
+28    const checkAuthStatus = async () => {
+29      try {
+30        const response = await api.get('/user');
+31        if (response.status === 401) {
+32          setIsAuthenticated(false);
+33          setUserData(null);
+34          return;
+35        }
+
+
+36        if (response.status === 200) {
+37          const user = response.data.user;
+38          setUserData(user);
+39          if (!allowedRoles.includes(user.role)) {
+40            await logout();
+41            return;
+42          }
+43          setIsAuthenticated(true);
+44        }
+45      } catch (error) {
+46        console.error("Authentication check failed:", error.message);
+47        setIsAuthenticated(false);
+48        setUserData(null);
+49      } finally {
+50        setLoading(false);
+51      }
+52    };
+53    checkAuthStatus();
+54  }, [isAuthenticated]);
+55  useEffect(() => {
+56    if (loading) return;
+57    if (!isAuthenticated && location.pathname !== '/login' && location.pathname !== '/') {
+58      navigate('/login');
+59    } else if (isAuthenticated && location.pathname === '/login') {
+60      navigate('/admin/customers');
+61    }
+62  }, [isAuthenticated, location.pathname, navigate, loading]);
+63  return (
+64    <AuthContext.Provider value={{ isAuthenticated, userData, login, logout }}>
+65      {!loading && children}
+66    </AuthContext.Provider>
+67  );
+68 };
