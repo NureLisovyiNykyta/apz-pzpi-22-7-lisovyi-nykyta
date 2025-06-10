@@ -1,0 +1,883 @@
+Міністерство освіти і науки України
+Харківський національний університет радіоелектроніки
+Кафедра програмної інженерії
+ 
+ 
+Лабораторна робота 
+з дисципліни «Архітектура програмного забезпечення»
+з теми: «Розробка програмної архітектури та створення і  відлагодження програмного коду програмного застосунку мобільного пристрою для  програмної системи»  
+
+
+Виконав
+ст. гр. ПЗПІ-22-7
+Лісови Нікіта Андрійович
+08 червня 2025 р.  
+Перевірив
+ст. викл. каф. ПЗ
+Сокорчук І. П. 
+
+
+
+
+
+Харків 2025
+5.1 Історія змін
+Таблиця 1.1 – Історія змін звіту
+	№
+	Дата
+	Версія звіту
+	Опис змін та виправлень
+	1
+	06.06.2025
+	0.1
+	Створено клієнтської (mobile) частини частини програмної системи
+	2
+	07.06.2025
+	0.2
+	Створено розділ «Аналіз завдання»,
+ «Хід роботи»,
+ «Висновки» та додатки
+«Додаток А», «Додаток Б», «Додаток В», «Додаток Г», «Додаток Д»
+	3
+	08.06.2025
+	0.3
+	Записано відео презентацію
+	4
+	08.06.2025
+	1.0
+	перевірено відповідність вимогам ДСТУ 3008:2015
+	
+
+________________
+
+
+5.2        Аналіз завдання  
+
+
+У межах даної лабораторної роботи було поставлено завдання розробити мобільний програмний застосунок, який є складовою частиною комплексної системи для забезпечення безпеки житла. Основна мета — надати користувачам можливість у реальному часі контролювати стан дверних сенсорів, отримувати сповіщення про події, а також керувати підпискою на додаткові сервіси. Для досягнення цієї мети було проведено аналіз функціональних вимог та побудовано відповідні UML-діаграми, які відображають ключові аспекти архітектури та логіки роботи застосунку.
+
+
+5.3        Хід роботи
+
+
+5.3.1 Опис архітектури мобільного застосунку
+Для розробки мобільного застосунку було обрано архітектурний підхід MVVM (Model-View-ViewModel) (Див. Додаток Д) у поєднанні з патерном репозиторію та принципами Clean Architecture. Така структура дозволяє чітко розділити відповідальність між шарами, спрощує тестування та подальший розвиток проєкту.
+Model відповідає за структуру даних та взаємодію з джерелами інформації (API, локальна база даних). ViewModel містить бізнес-логіку, обробляє дані для відображення у View та реагує на дії користувача. View реалізує інтерфейс користувача та підписується на зміни у ViewModel.
+
+
+5.3.2 Взаємодії з іншими частинами системи
+Мобільний застосунок взаємодіє з бекендом через REST API, що забезпечує обмін даними у реальному часі. Для цього використовується захищене з'єднання з автентифікацією користувача через OAuth. Застосунок надсилає запити до серверу для отримання інформації про стан сенсорів, історію подій, а також для керування підпискою. Для оперативного інформування користувача про зміну стану сенсорів використовується система push-сповіщень. Інтеграція зі Stripe дозволяє керувати підписками та здійснювати оплату безпосередньо з мобільного застосунку.
+
+
+5.3.3. Опис будови мобільного застосунку
+Застосунок складається з декількох основних модулів:
+* модуль автентифікації: реєстрація, вхід, відновлення паролю, підтвердження email;
+* модуль керування оселями та сенсорами: додавання, редагування, перегляд стану пристроїв, вибір режиму охорони;
+* модуль профілю: перегляд та редагування особистих даних, зміна паролю;
+* модуль підписок: оформлення, скасування підписки, перегляд історії оплат.
+
+
+5.3.4. Інтеграція у загальну систему
+Мобільний застосунок є частиною розподіленої системи, до складу якої входять:
+* бекенд (Flask + PostgreSQL) - обробка запитів, зберігання даних, логіка керування пристроями та підписками;
+* веб-інтерфейс для адміністраторів (React SPA) - керування користувачами, пристроями, аналітика;
+* мобільний застосунок (Kotlin) - інтерфейс для кінцевого користувача, який забезпечує моніторинг та керування у зручній формі.
+5.3.5. Опис UML діаграма прецедентів (Use Case Diagram)
+Діаграма прецедентів (Use Case Diagram) (Див. Додаток Б) дозволяє побачити основні сценарії взаємодії користувача із системою. На діаграмі відображено такі ключові дії, як реєстрація, вхід у систему, підтвердження електронної пошти, керування оселею та датчиками, зміна паролю, редагування акаунту, а також операції з підпискою. Діаграма демонструє, що користувач може виконувати як базові дії (наприклад, вхід чи реєстрація), так і більш складні сценарії, пов’язані з керуванням пристроями, переглядом історії подій, оплатою чи скасуванням підписки. Взаємозв’язки між прецедентами (include, extend) відображають залежності та розширення функціоналу, що дозволяє гнучко реагувати на різні потреби користувача.
+
+
+5.3.6. Опис UML діаграма пакетів (Package Diagram)
+Діаграма пакетів (Package Diagram) (Див. Додаток В) відображає архітектурну структуру мобільного застосунку, який побудовано за принципами MVVM, використовуючи репозиторії та підхід Clean Architecture. Основні пакети поділені на три рівні: data, domain та presentation. У пакеті data зосереджені компоненти для роботи з API, локальним сховищем, моделями даних, репозиторіями, маперами та мережею. Пакет domain містить бізнес-логіку у вигляді use case-ів. Presentation відповідає за відображення даних, містить основні екрани, моделі для UI та спільні компоненти. Діаграма чітко показує залежності між пакетами: presentation використовує domain, а domain — data. Така структура забезпечує модульність, спрощує тестування та підтримку застосунку, а також дозволяє масштабувати систему у майбутньому.
+
+
+5.3.7. Опис UML діаграма діяльності (Activity Diagram)
+Діаграма діяльності (Activity Diagram) (Див. Додаток Г) ілюструє типовий шлях користувача у мобільному застосунку — від моменту відкриття додатку до виконання основних дій. Вона відображає послідовність кроків: вибір дії, автентифікація або реєстрація, підтвердження електронної пошти, а далі — робота з головним екраном. Далі користувач може керувати оселями та датчиками, змінювати налаштування профілю, а також оформлювати чи скасовувати підписку. Діаграма містить розгалуження, що дозволяє врахувати різні сценарії використання, наприклад, додавання нової оселі чи датчика, зміну паролю або редагування акаунту. Такий підхід забезпечує наочність логіки роботи застосунку та допомагає виявити можливі вузькі місця ще на етапі проектування.
+
+
+4.4        Висновки        
+У ході виконання лабораторної роботи було розроблено мобільний застосунок для системи моніторингу безпеки житла, що інтегрується з серверною частиною та веб-інтерфейсом адміністратора. Було проаналізовано вимоги до функціоналу, побудовано UML-діаграми для візуалізації основних сценаріїв використання, архітектури та логіки роботи застосунку.
+Під час розробки було прийнято низку інженерних рішень, зокрема використання архітектури MVVM, патерну репозиторію та принципів Clean Architecture, що забезпечило модульність, масштабованість і зручність підтримки коду.
+Мобільний застосунок успішно реалізує основні функції: автентифікацію користувачів, керування оселями та сенсорами, роботу з підписками та отримання сповіщень у реальному часі.
+Проведене тестування підтвердило працездатність розробленого програмного забезпечення та його готовність до подальшого впровадження у складі комплексної системи Safe Home.
+
+
+________________
+
+
+ДОДАТОК А
+Відеозапис презентації результатів лабораторної роботи: 
+https://youtu.be/1jrVHLbeY3g
+Хронологічний опис відеозапису:
+* 00:00  --  Тема роботи
+* 00:15  --  Опис виконаної роботи
+* 01:15  --   Опис деплою
+* 01:35  --   Функціональне тестування клієнтської веб частина  програмної системи
+
+
+________________
+
+
+ДОДАТОК Б
+UML діаграму прецедентів (Use Case Diagram)
+
+
+  
+________________
+
+ДОДАТОК В
+UML діаграму пакетів (Package Diagram)
+  
+
+________________
+
+
+ДОДАТОК Г
+UML діаграму діяльності (Activity Diagram)
+  
+  
+________________
+
+ДОДАТОК Д
+Програмний код
+Д.1. Приклад коду моделі даних
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/src/main/java/com/example/safehome/data/model/SignInRequest.kt
+
+
+1 package com.example.safehome.data.model
+
+
+2 data class SignInRequest(
+3     val email: String,
+4     val password: String,
+5 )
+
+
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/src/main/java/com/example/safehome/data/model/SignInResponse.kt
+
+
+1 package com.example.safehome.data.model
+
+
+2 data class SignInResponse(
+3     val message: String,
+4     val token: String
+5 )
+
+
+Д.2. Приклад репозиторію
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/src/main/java/com/example/safehome/data/repo/AuthRepository.kt
+
+1  package com.example.safehome.data.repo
+2  
+3  import com.example.safehome.data.api.AuthApi
+4  import com.example.safehome.data.model.ErrorType
+5  import com.example.safehome.data.model.FirebaseLoginRequest
+6  import com.example.safehome.data.model.ResetPasswordRequest
+7  import com.example.safehome.data.model.ResetPasswordResponse
+8  import com.example.safehome.data.model.Result
+9  import com.example.safehome.data.model.SignInRequest
+10 import com.example.safehome.data.model.SignUpRequest
+11 import com.example.safehome.data.model.SignUpResponse
+12 import com.example.safehome.data.network.NetworkHandler
+13 import timber.log.Timber
+14 import javax.inject.Inject
+15 import javax.inject.Singleton
+16 
+17 @Singleton
+18 class AuthRepository @Inject constructor(
+19     private val authApi: AuthApi,
+20     private val networkHandler: NetworkHandler,
+21     private val tokenRepository: TokenRepository,
+22     private val deviceRepository: DeviceRepository,
+23 ) {
+24     suspend fun login(email: String, password: String): Result<Boolean> {
+25         return when (val result = networkHandler.safeApiCall { authApi.login(SignInRequest(email, password)) }) {
+26             is Result.Success -> {
+27                 val token = result.data.token
+28                 tokenRepository.saveToken(token)
+29                 when (val deviceResult = deviceRepository.addDevice(token)) {
+30                     is Result.Success -> Timber.d("Device registered: ${deviceResult.data.message}")
+31                     is Result.Error -> Timber.d("Error: Failed to register device ${deviceResult.errorType}")
+32                     is Result.Loading -> Timber.d("Device registration in progress")
+33                 }
+34                 Result.Success(true)
+35             }
+36             is Result.Error -> Result.Error(result.errorType)
+37             is Result.Loading -> Result.Loading
+38         }
+39     }
+40 
+41     suspend fun googleLogin(firebaseToken: String): Result<Boolean> {
+42         return when (val result = networkHandler.safeApiCall { authApi.firebaseLogin(FirebaseLoginRequest(firebaseToken)) }) {
+43             is Result.Success -> {
+44                 val token = result.data.token
+45                 tokenRepository.saveToken(token)
+46                 when (val deviceResult = deviceRepository.addDevice(token)) {
+47                     is Result.Success -> Timber.d("Device registered: ${deviceResult.data.message}")
+48                     is Result.Error -> Timber.d("Error: Failed to register device ${deviceResult.errorType}")
+49                     is Result.Loading -> Timber.d("Device registration in progress")
+50                 }
+51                 Result.Success(true)
+52             }
+53             is Result.Error -> Result.Error(result.errorType)
+54             is Result.Loading -> Result.Loading
+55         }
+56     }
+57 
+58     suspend fun verifyToken(): Result<Boolean> {
+59         val token = tokenRepository.getToken() ?: return Result.Error(ErrorType.InternalError("No token available"))
+60         return when (val result = networkHandler.safeApiCall { authApi.checkToken(token) }) {
+61             is Result.Success -> {
+62                 Result.Success(result.data.valid)
+63             }
+64             is Result.Error -> {
+65                 if (result.errorType is ErrorType.ServerError && result.errorType.code == 401) {
+66                     tokenRepository.clearToken()
+67                 }
+68                 Result.Error(result.errorType)
+69             }
+70             is Result.Loading -> Result.Loading
+71         }
+72     }
+73 
+74     suspend fun register(name: String, email: String, password: String): Result<SignUpResponse> {
+75         return networkHandler.safeApiCall {
+76             authApi.signUp(SignUpRequest(name, email, password))
+77         }
+78     }
+79 
+80     suspend fun resetPassword(email: String): Result<ResetPasswordResponse> {
+81         return networkHandler.safeApiCall {
+82             authApi.resetPassword(ResetPasswordRequest(email))
+83         }
+84     }
+85 }
+
+
+Д.3. Приклад api запитів
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/src/main/java/com/example/safehome/data/api/AuthApi.kt
+
+1  package com.example.safehome.data.api
+2  
+3  import com.example.safehome.data.model.AddDeviceRequest
+4  import com.example.safehome.data.model.FirebaseLoginRequest
+5  import com.example.safehome.data.model.MessageResponse
+6  import com.example.safehome.data.model.ResetPasswordRequest
+7  import com.example.safehome.data.model.ResetPasswordResponse
+8  import com.example.safehome.data.model.SignUpResponse
+9  import com.example.safehome.data.model.VerifyTokenResponse
+10 import com.example.safehome.data.model.SignInRequest
+11 import com.example.safehome.data.model.SignUpRequest
+12 import com.example.safehome.data.model.SignInResponse
+13 import retrofit2.http.Body
+14 import retrofit2.http.Header
+15 import retrofit2.http.Headers
+16 import retrofit2.http.POST
+17 
+18 interface AuthApi {
+19     @POST("login/token")
+20     @Headers(
+21         "Content-Type: application/json"
+22     )
+23     suspend fun login(
+24         @Body request: SignInRequest
+25     ): SignInResponse
+26 
+27     @POST("verify-token")
+28     @Headers(
+29         "Content-Type: application/json"
+30     )
+31     suspend fun checkToken(
+32         @Header("Authorization") token: String
+33     ): VerifyTokenResponse
+34 
+35     @POST("register")
+36     @Headers(
+37         "Content-Type: application/json"
+38     )
+39     suspend fun signUp(
+40         @Body request: SignUpRequest
+41     ): SignUpResponse
+42 
+43     @POST("reset-password")
+44     @Headers(
+45         "Content-Type: application/json"
+46     )
+47     suspend fun resetPassword(
+48         @Body request: ResetPasswordRequest
+49     ): ResetPasswordResponse
+50 
+51     @POST("login/firebase")
+52     @Headers(
+53         "Content-Type: application/json"
+54     )
+55     suspend fun firebaseLogin(
+56         @Body request: FirebaseLoginRequest
+57     ): SignInResponse
+58 
+59     @POST("devices")
+60     @Headers(
+61         "Content-Type: application/json"
+62     )
+63     suspend fun addDevice(
+64         @Header("Authorization") token: String,
+65         @Body request: AddDeviceRequest
+66     ): MessageResponse
+67 }
+
+
+
+
+Д.4. Приклад коду бізнес-логіки (use case)
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/src/main/java/com/example/safehome/domain/AuthUseCase.kt
+
+1  package com.example.safehome.domain
+2  
+3  import com.example.safehome.data.model.Result
+4  import com.example.safehome.data.repo.AuthRepository
+5  import javax.inject.Inject
+6  
+7  class AuthUseCase @Inject constructor(
+8      private val authRepository: AuthRepository,
+9  ) {
+10     suspend fun isUserAuthorized(email: String, password: String): Result<Boolean> {
+11         return authRepository.login(email, password)
+12     }
+13 
+14     suspend fun isTokenExpired(): Result<Boolean> {
+15         return authRepository.verifyToken()
+16     }
+17 
+18     suspend fun firebaseGoogleAuth(firebaseToken: String): Result<Boolean> {
+19         return authRepository.googleLogin(firebaseToken)
+20     }
+21 }
+
+
+Д.5. Приклад коду активності
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/src/main/java/com/example/safehome/presentation/auth/AuthActivity.kt
+
+1  package com.example.safehome.presentation.auth
+2  
+3  import android.os.Bundle
+4  import android.view.View
+5  import androidx.activity.enableEdgeToEdge
+6  import androidx.appcompat.app.AppCompatActivity
+7  import androidx.core.view.ViewCompat
+8  import androidx.core.view.WindowInsetsCompat
+9  import androidx.navigation.NavController
+10 import androidx.navigation.fragment.NavHostFragment
+11 import com.example.safehome.R
+12 import com.example.safehome.databinding.ActivityAuthBinding
+13 import dagger.hilt.android.AndroidEntryPoint
+14 
+15 @AndroidEntryPoint
+16 class AuthActivity : AppCompatActivity() {
+17     private lateinit var binding: ActivityAuthBinding
+18     private lateinit var navController: NavController
+19 
+20     override fun onCreate(savedInstanceState: Bundle?) {
+21         super.onCreate(savedInstanceState)
+22 
+23         enableEdgeToEdge()
+24 
+25         binding = ActivityAuthBinding.inflate(layoutInflater)
+26         setContentView(binding.root)
+27 
+28         // Відступ зверху
+29         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+30             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+31             v.setPadding(0, systemBars.top, 0, 0)
+32             insets
+33         }
+34 
+35         val navHostFragment = supportFragmentManager
+36             .findFragmentById(binding.fragmentContainerView.id) as NavHostFragment
+37         navController = navHostFragment.navController
+38 
+39         binding.backButton.setOnClickListener {
+40             navController.popBackStack(R.id.signInFragment, false)
+41         }
+42 
+43         navController.addOnDestinationChangedListener { _, destination, _ ->
+44             binding.backButton.visibility =
+45                 if (destination.id == R.id.signInFragment) View.GONE
+46                 else View.VISIBLE
+47         }
+48     }
+49 }
+
+
+Д.6. Приклад коду View Model
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/src/main/java/com/example/safehome/presentation/viewModel/SignInViewModel.kt
+
+1  package com.example.safehome.presentation.auth.viewModel
+2  
+3  import android.content.Context
+4  import android.content.Intent
+5  import androidx.lifecycle.ViewModel
+6  import androidx.lifecycle.viewModelScope
+7  import com.example.safehome.R
+8  import com.example.safehome.data.model.ErrorType
+9  import com.example.safehome.data.model.Result
+10 import com.example.safehome.domain.AuthUseCase
+11 import com.example.safehome.presentation.auth.utils.ValidatorUtils
+12 import com.google.android.gms.auth.api.signin.GoogleSignIn
+13 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+14 import com.google.android.gms.common.api.ApiException
+15 import com.google.firebase.auth.FirebaseAuth
+16 import com.google.firebase.auth.GoogleAuthProvider
+17 import dagger.hilt.android.lifecycle.HiltViewModel
+18 import kotlinx.coroutines.channels.BufferOverflow
+19 import kotlinx.coroutines.flow.MutableSharedFlow
+20 import kotlinx.coroutines.flow.SharedFlow
+21 import kotlinx.coroutines.flow.asSharedFlow
+22 import kotlinx.coroutines.launch
+23 import javax.inject.Inject
+24 
+25 @HiltViewModel
+26 class SignInViewModel @Inject constructor(
+27     private val authUseCase: AuthUseCase,
+28     private val firebaseAuth: FirebaseAuth,
+29 ) : ViewModel() {
+30     private val _authState = MutableSharedFlow<Result<Boolean>>(
+31         replay = 0,
+32         extraBufferCapacity = 1,
+33         onBufferOverflow = BufferOverflow.DROP_OLDEST
+34     )
+35     val authState: SharedFlow<Result<Boolean>> get() = _authState.asSharedFlow()
+36 
+37     fun checkUserAuthorization(email: String, password: String) {
+38         when {
+39             !ValidatorUtils.isNotBlank(email, password) -> {
+40                 _authState.tryEmit(
+41                     Result.Error(ErrorType.InternalError("Email or password is empty"))
+42                 )
+43             }
+44             !ValidatorUtils.isValidEmail(email) -> {
+45                 _authState.tryEmit(
+46                     Result.Error(ErrorType.InternalError("Email is incorrect"))
+47                 )
+48             }
+49             !ValidatorUtils.isValidPassword(password) -> {
+50                 _authState.tryEmit(
+51                     Result.Error(ErrorType.InternalError("Password must be 8 characters or more"))
+52                 )
+53             }
+54             else -> {
+55                 _authState.tryEmit(Result.Loading)
+56                 viewModelScope.launch {
+57                     val result = authUseCase.isUserAuthorized(email, password)
+58                     _authState.emit(result)
+59                 }
+60             }
+61         }
+62     }
+63 
+64     fun getGoogleSignInIntent(context: Context): Intent {
+65         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+66             .requestIdToken(context.getString(R.string.default_web_client_id))
+67             .requestEmail()
+68             .build()
+69         val client = GoogleSignIn.getClient(context, gso)
+70         return client.signInIntent
+71     }
+72 
+73     fun handleGoogleSignInResult(data: Intent?) {
+74         viewModelScope.launch {
+75             _authState.emit(Result.Loading)
+76             try {
+77                 val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+78                 val account = task.getResult(ApiException::class.java)
+79                 firebaseAuthWithGoogle(account.idToken!!)
+80             } catch (e: ApiException) {
+81                 _authState.emit(Result.Error(ErrorType.InternalError("Google Sign-In failed: ${e.message}")))
+82             }
+83         }
+84     }
+85 
+86     private fun firebaseAuthWithGoogle(idToken: String) {
+87         val credential = GoogleAuthProvider.getCredential(idToken, null)
+88         firebaseAuth.signInWithCredential(credential)
+89             .addOnCompleteListener { task ->
+90                 if (task.isSuccessful) {
+91                     val user = firebaseAuth.currentUser
+92                     user?.getIdToken(false)?.addOnSuccessListener { result ->
+93                         val firebaseIdToken = result.token
+94                         if (firebaseIdToken != null) {
+95                             sendTokenToServer(firebaseIdToken)
+96                         } else {
+97                             _authState.tryEmit(Result.Error(ErrorType.InternalError("Failed to get Firebase ID token")))
+98                         }
+99                     }?.addOnFailureListener { e ->
+100                         _authState.tryEmit(Result.Error(ErrorType.InternalError("Failed to get Firebase ID token: ${e.message}")))
+101                     }
+102                 } else {
+103                     _authState.tryEmit(Result.Error(ErrorType.InternalError("Firebase authentication failed: ${task.exception?.message}")))
+104                 }
+105             }
+106     }
+107 
+108     private fun sendTokenToServer(firebaseIdToken: String) {
+109         viewModelScope.launch {
+110             _authState.tryEmit(Result.Loading)
+111             viewModelScope.launch {
+112                 val result = authUseCase.firebaseGoogleAuth(firebaseIdToken)
+113                 _authState.emit(result)
+114             }
+115         }
+116     }
+117 }
+
+
+Д.7. Приклад коду фрагменту
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/src/main/java/com/example/safehome/presentation/fragments/SignInFragment.kt
+
+
+01  package com.example.safehome.presentation.auth.fragments
+02  
+03  import android.content.Intent
+04  import android.os.Bundle
+05  import androidx.fragment.app.Fragment
+06  import android.view.LayoutInflater
+07  import android.view.View
+08  import android.view.ViewGroup
+09  import android.widget.Toast
+10  import androidx.activity.ComponentActivity
+11  import androidx.activity.result.contract.ActivityResultContracts
+12  import androidx.fragment.app.viewModels
+13  import androidx.lifecycle.Lifecycle
+14  import androidx.lifecycle.lifecycleScope
+15  import androidx.lifecycle.repeatOnLifecycle
+16  import androidx.navigation.NavController
+17  import androidx.navigation.fragment.findNavController
+18  import com.example.safehome.R
+19  import com.example.safehome.data.model.ErrorType
+20  import com.example.safehome.databinding.FragmentSignInBinding
+21  import com.example.safehome.presentation.auth.utils.PasswordVisibilityUtils
+22  import com.example.safehome.data.model.Result
+23  import com.example.safehome.presentation.auth.viewModel.SignInViewModel
+24  import com.example.safehome.presentation.main.MainActivity
+25  import dagger.hilt.android.AndroidEntryPoint
+26  import kotlinx.coroutines.launch
+27  import timber.log.Timber
+28  
+29  private const val ARG_PARAM1 = "param1"
+30  private const val ARG_PARAM2 = "param2"
+31  
+32  @AndroidEntryPoint
+33  class SignInFragment : Fragment() {
+34      private var param1: String? = null
+35      private var param2: String? = null
+36  
+37      private lateinit var binding: FragmentSignInBinding
+38      private lateinit var navController: NavController
+39      private val authViewModel: SignInViewModel by viewModels()
+40  
+41      private var _isPasswordVisible = false
+42  
+43      private val googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+44          authViewModel.handleGoogleSignInResult(result.data)
+45      }
+46  
+47      override fun onCreate(savedInstanceState: Bundle?) {
+48          super.onCreate(savedInstanceState)
+49          arguments?.let {
+50              param1 = it.getString(ARG_PARAM1)
+51              param2 = it.getString(ARG_PARAM2)
+52          }
+53      }
+54  
+55      override fun onCreateView(
+56          inflater: LayoutInflater, container: ViewGroup?,
+57          savedInstanceState: Bundle?
+58      ): View {
+59          binding = FragmentSignInBinding.inflate(inflater, container, false)
+60          return binding.root
+61      }
+62  
+63      override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+64          super.onViewCreated(view, savedInstanceState)
+65  
+66          navController = findNavController()
+67  
+68          viewLifecycleOwner.lifecycleScope.launch {
+69              viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+70                  authViewModel.authState.collect { result ->
+71                      when (result) {
+72                          is Result.Loading -> Timber.tag("Auth").d("Loading...")
+73                          is Result.Success -> {
+74                              Timber.tag("Auth").d("User is authorized")
+75                              startActivity(MainActivity::class.java)
+76                          }
+77                          is Result.Error -> {
+78                              val message = when (val error = result.errorType) {
+79                                  is ErrorType.ServerError -> {
+80                                      if (error.code == 422) "Wrong login or password"
+81                                      else if (error.code == 403) "Server is closed"
+82                                      else error.message
+83                                  }
+84                                  is ErrorType.NetworkError -> error.message
+85                                  is ErrorType.InternalError -> error.message
+86                              }
+87  
+88                              Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show()
+89                          }
+90                      }
+91                  }
+92              }
+93          }
+94  
+95          binding.signInButton.setOnClickListener {
+96              val email = binding.emailEditText.text.toString().trim()
+97              val password = binding.pswdEditText.text.toString().trim()
+98              authViewModel.checkUserAuthorization(email, password)
+99          }
+100 
+101         binding.googleButton.setOnClickListener {
+102             val signInIntent = authViewModel.getGoogleSignInIntent(requireContext())
+103             googleSignInLauncher.launch(signInIntent)
+104         }
+105 
+106         binding.resetPswdButton.setOnClickListener {
+107             navController.navigate(R.id.action_signInFragment_to_resetPasswordFragment)
+108         }
+109 
+110         binding.signUpButton.setOnClickListener {
+111             navController.navigate(R.id.action_signInFragment_to_signUpFragment)
+112         }
+113 
+114         binding.eyeButton.setOnClickListener {
+115             _isPasswordVisible = !_isPasswordVisible
+116             PasswordVisibilityUtils.togglePasswordVisibility(binding.pswdEditText, binding.eyeButton, _isPasswordVisible)
+117         }
+118     }
+119 
+120     private fun startActivity(activityClass: Class<out ComponentActivity>) {
+121         val intent = Intent(context, activityClass)
+122         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+123         startActivity(intent)
+124     }
+125 
+126     companion object {
+127         @JvmStatic
+128         fun newInstance(param1: String, param2: String) =
+129             SignInFragment().apply {
+130                 arguments = Bundle().apply {
+131                     putString(ARG_PARAM1, param1)
+132                     putString(ARG_PARAM2, param2)
+133                 }
+134             }
+135     }
+136 }
+
+
+
+
+Д.8. Приклад макету інтерфейсу
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/src/main/res/layout/activity_auth.xml
+
+
+01  <?xml version="1.0" encoding="utf-8"?>
+02  <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+03      xmlns:app="http://schemas.android.com/apk/res-auto"
+04      android:id="@+id/activity_auth"
+05      style="@style/Activity" >
+
+
+06      <androidx.fragment.app.FragmentContainerView
+07          android:id="@+id/fragmentContainerView"
+08          android:name="androidx.navigation.fragment.NavHostFragment"
+09          android:layout_width="match_parent"
+10          android:layout_height="match_parent"
+11          app:defaultNavHost="true"
+12          app:navGraph="@navigation/auth_nav_graph" />
+
+
+13      <ImageButton
+14          android:id="@+id/backButton"
+15          style="@style/BackButton"
+16          android:contentDescription="@string/error_image"/>
+17  </FrameLayout>
+
+
+
+
+Д.9. Код маніфесту застосунку
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/src/main/AndroidManifest.xml
+
+
+01  <?xml version="1.0" encoding="utf-8"?>
+02  <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+03      xmlns:tools="http://schemas.android.com/tools" >
+
+
+04      <uses-permission android:name="android.permission.INTERNET" />
+05      <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+06      <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+
+07      <application
+08          android:name=".SafeHomeApplication"
+09          android:allowBackup="true"
+10          android:dataExtractionRules="@xml/data_extraction_rules"
+11          android:fullBackupContent="@xml/backup_rules"
+12          android:icon="@mipmap/ic_launcher"
+13          android:label="@string/app_name"
+14          android:roundIcon="@mipmap/ic_launcher_round"
+15          android:supportsRtl="true"
+16          android:networkSecurityConfig="@xml/network_security_config"
+17          android:theme="@style/Theme.SafeHome"
+18          tools:targetApi="31" >
+
+
+19          <activity
+20              android:name=".presentation.launch.LaunchActivity"
+21              android:excludeFromRecents="true"
+22              android:exported="true"
+23              android:label="@string/title_activity_launch"
+24              android:theme="@style/Theme.App.SplashScreen" >
+25              <intent-filter>
+26                  <action android:name="android.intent.action.MAIN" />
+27                  <category android:name="android.intent.category.LAUNCHER" />
+28              </intent-filter>
+29          </activity>
+
+
+30          <activity
+31              android:name=".presentation.auth.AuthActivity"
+32              android:exported="true"
+33              android:label="@string/title_activity_auth"
+34              android:theme="@style/Theme.SafeHome" />
+
+
+35          <activity
+36              android:name=".presentation.main.MainActivity"
+37              android:exported="true"
+38              android:theme="@style/Theme.SafeHome" >
+39          </activity>
+
+
+40          <service
+41              android:name=".FirebaseMessagingService"
+42              android:exported="false">
+43              <intent-filter>
+44                  <action android:name="com.google.firebase.MESSAGING_EVENT" />
+45              </intent-filter>
+46          </service>
+
+
+47      </application>
+48  </manifest>
+
+
+Д.10. Код файлу збірки модулю
+GitHub репозиторій:  https://github.com/NureLisovyiNykyta/apz-pzpi-22-7-lisovyi-nykyta/blob/main/Lab5/pzpi-22-7-lisovyi-nykyta-lab5/pzpi-22-7-lisovyi-nykyta-lab5-code/app/build.gradle.kts
+
+
+01  plugins {
+02      alias(libs.plugins.android.application)
+03      alias(libs.plugins.kotlin.android)
+04      alias(libs.plugins.kotlin.compose)
+05      alias(libs.plugins.hilt)
+06      alias(libs.plugins.ksp)
+07      alias(libs.plugins.google.plugin)
+08      id("kotlin-kapt")
+09  }
+
+
+10  kapt {
+11      correctErrorTypes = true
+12  }
+
+
+13  android {
+14      namespace = "com.example.safehome"
+15      compileSdk = 35
+
+
+16      defaultConfig {
+17          applicationId = "com.example.safehome"
+18          minSdk = 24
+19          targetSdk = 35
+20          versionCode = 1
+21          versionName = "1.0"
+22          testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+23      }
+
+
+24      buildTypes {
+25          release {
+26              isMinifyEnabled = false
+27              proguardFiles(
+28                  getDefaultProguardFile("proguard-android-optimize.txt"),
+29                  "proguard-rules.pro"
+30              )
+31          }
+32      }
+
+
+33      compileOptions {
+34          sourceCompatibility = JavaVersion.VERSION_11
+35          targetCompatibility = JavaVersion.VERSION_11
+36      }
+
+
+37      kotlinOptions {
+38          jvmTarget = "11"
+39      }
+
+
+40      buildFeatures {
+41          viewBinding = true
+42          compose = true
+43      }
+44  }
+
+
+45  dependencies {
+46      ksp(libs.androidx.room.compiler)
+47      kapt(libs.hilt.compiler)
+48      testImplementation(libs.junit)
+49      implementation(libs.androidx.room.runtime)
+50      implementation(libs.androidx.room.ktx)
+51      implementation(libs.androidx.security.crypto)
+52      implementation(libs.logging.interceptor)
+53      implementation(libs.hilt.android)
+54      implementation(libs.firebase.common.ktx)
+55      implementation(libs.datastore.preferences)
+56      kapt(libs.hilt.compiler)
+57      implementation(libs.jakewharton.timber)
+58      implementation(libs.retrofit2.retrofit)
+59      implementation(libs.converter.gson)
+60      implementation(libs.androidx.core.splashscreen)
+61      implementation(libs.androidx.core.ktx)
+62      implementation(libs.androidx.appcompat)
+63      implementation(libs.material)
+64      implementation(libs.androidx.constraintlayout)
+65      implementation(libs.androidx.lifecycle.livedata.ktx)
+66      implementation(libs.androidx.lifecycle.viewmodel.ktx)
+67      implementation(libs.androidx.navigation.fragment.ktx)
+68      implementation(libs.androidx.navigation.ui.ktx)
+69      implementation(libs.androidx.lifecycle.runtime.ktx)
+70      implementation(libs.androidx.activity.compose)
+71      implementation(platform(libs.androidx.compose.bom))
+72      implementation(libs.androidx.ui)
+73      implementation(libs.androidx.ui.graphics)
+74      implementation(libs.androidx.ui.tooling.preview)
+75      implementation(libs.androidx.material3)
+76      implementation(libs.androidx.worker)
+77      implementation(platform(libs.google.firebase.bom))
+78      implementation(libs.google.firebase)
+79      implementation(libs.firebase.messaging)
+80      implementation(libs.firebase.auth.ktx)
+81      implementation(libs.play.services.auth)
+82      debugImplementation(libs.androidx.ui.tooling)
+83      debugImplementation(libs.androidx.ui.test.manifest)
+84      androidTestImplementation(libs.androidx.junit)
+85      androidTestImplementation(libs.androidx.espresso.core)
+86      androidTestImplementation(platform(libs.androidx.compose.bom))
+87      androidTestImplementation(libs.androidx.ui.test.junit4)
+88      debugImplementation(libs.androidx.ui.tooling)
+89      debugImplementation(libs.androidx.ui.test.manifest)
+90  }
